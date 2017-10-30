@@ -109,3 +109,15 @@ def calcBCA(estimLabels, trueLabels, nrClasses):
             bcaAll += [bcaCurr]
             # print('bcaCurr %f TP %f TN %f FP %f FN %f' % (bcaCurr, TP, TN, FP, FN))
     return np.mean(bcaAll)
+
+
+def calculate_WES(estimates, lowers, uppers, trues):
+    """Weighted Error Score"""
+    coefs = 1 / (uppers - lowers)
+    return np.sum(coefs * np.abs(estimates - trues)) / np.sum(coefs)
+
+
+def calculate_CPA(estimates, lowers, uppers, trues):
+    """Coverage Probability Accuracy for 50% Confidence Interval"""
+    cov_prob = np.sum((lowers < trues) & (uppers > trues)) / trues.shape[0]
+    return np.abs(cov_prob - 0.5)
