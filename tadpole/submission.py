@@ -45,9 +45,9 @@ def create_submission_table(subjects, n_forecasts):
     submission_table['Forecast Month'] = np.tile(range(1, n_forecasts + 1), (n_subjects, 1)).flatten()
 
     # * Submission dates - compare with submission template
-    ForecaseDates = [dt.datetime(2010, 5, 1) + relativedelta(months=i) for i in range(n_forecasts)]
+    forecase_dates = [dt.datetime(2010, 5, 1) + relativedelta(months=i) for i in range(n_forecasts)]
 
-    # ForecastDatesStrings = [dt.datetime.strftime(d, '%Y-%m') for d in ForecastDates]
-    submission_table['Forecast Date'] = np.tile(ForecastDates, (n_subjects, 1)).flatten()
+    # forecast_dates_strings = [dt.datetime.strftime(d, '%Y-%m') for d in forecast_dates]
+    submission_table['Forecast Date'] = np.tile(forecast_dates, (n_subjects, 1)).flatten()
 
     return submission_table

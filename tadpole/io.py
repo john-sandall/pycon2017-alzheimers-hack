@@ -32,34 +32,34 @@ def load_tadpole_data(filename):
     :rtype: tuple of pd.DataFrame
     """
     # * Read in the D1_D2 spreadsheet: may give a DtypeWarning, but the read/import works.
-    LB_Table = pd.read_csv(filename, low_memory=False)
+    LB_table = pd.read_csv(filename, low_memory=False)
 
     # * Target variables: convert strings to numeric if necessary
-    targetVariables = ['DX', 'ADAS13', 'Ventricles']
-    variablesToCheck = ['RID', 'ICV_bl'] + targetVariables[1:]  # also check RosterID and IntraCranialVolume
-    for var_name in variablesToCheck:
-        var0 = LB_Table[var_name].iloc[0]
+    target_variables = ['DX', 'ADAS13', 'Ventricles']
+    variables_to_check = ['RID', 'ICV_bl'] + targetVariables[1:]  # also check RosterID and IntraCranialVolume@
+    for var_name in variables_to_check:
+        var0 = LB_table[var_name].iloc[0]
         if isinstance(var0, str):
             # * Convert strings to numeric
-            LB_Table[var_name] = LB_Table[var_name].astype(np.int)
+            LB_table[var_name] = LB_table[var_name].astype(np.int)
 
-    LB_Table['Ventricles_ICV'] = LB_Table['Ventricles'] / LB_Table['ICV_bl']
+    LB_table['Ventricles_ICV'] = LB_table['Ventricles'] / LB_table['ICV_bl']
 
     def last_diagnosis(x):
         if pd.notnull(x):
             return x.split(' ')[-1]
 
-    LB_Table['CLIN_STAT'] = LB_Table['DX'].apply(last_diagnosis)
+    LB_table['CLIN_STAT'] = LB_table['DX'].apply(last_diagnosis)
 
     # * Compute months since Jan 2000 for each exam date
     ref = dt.datetime(2000, 1, 1)
-    LB_Table['EXAMDATE'] = pd.to_datetime(LB_Table.EXAMDATE)
+    LB_table['EXAMDATE'] = pd.to_datetime(LB_table.EXAMDATE)
 
-    LB_Table['ExamMonth'] = (LB_Table['EXAMDATE'] - ref).dt.days / 365 * 12
+    LB_table['ExamMonth'] = (LB_table['EXAMDATE'] - ref).dt.days / 365 * 12
 
-    targetVariables.extend(['Ventricles_ICV', 'CLIN_STAT'])
-    y = LB_Table.loc[:, ['RID'] + targetVariables]
-    X = LB_Table.drop(targetVariables, axis=1)
+    target_variables.extend(['Ventricles_ICV', 'CLIN_STAT'])
+    y = LB_table.loc[:, ['RID'] + target_variables]
+    X = LB_table.drop(target_variables, axis=1)
 
     age = get_age_at_exam(X)
     # need to match multi-index
@@ -69,7 +69,7 @@ def load_tadpole_data(filename):
     return X, y
 
 
-def write_submission_table(submission, outputFile):
+def write_submission_table(submission, output_file):
     """Write submission table to disk.
 
     :param submission: List of data frames with predictions
@@ -78,4 +78,4 @@ def write_submission_table(submission, outputFile):
     """
     submission_table = pd.concat(submission, axis=0)
     submission_table['Forecast Date'] = submission_table['Forecast Date'].apply(lambda d: d.strftime('%Y-%m'))
-    submission_table.to_csv(outputFile, index=False)
+    submission_table.to_csv(output_file, index=False)
