@@ -44,7 +44,7 @@ def a_value(probabilities, zero_label=0, one_label=1):
 
     n0 = sum(1 for point in sorted_ranks if point[0] == zero_label)
     n1 = sum(1 for point in sorted_ranks if point[0] == one_label)
-    sum_ranks = sum(index+1 for index, point in enumerate(sorted_points) if point[0] == zero_label)  # Add 1 as ranks are one-based
+    sum_ranks = sum(index+1 for index, point in enumerate(sorted_ranks) if point[0] == zero_label)  # Add 1 as ranks are one-based
 
     return (sum_ranks - n0*(n0+1) / 2.0) / float(n0 * n1)  # Eqn 3
 
@@ -73,7 +73,6 @@ def MAUC(data, num_classes):
 
     # Have to take average of A value with both classes acting as label 0 as this
     # gives different outputs for more than 2 classes
-    sum_avals = sum((a_value(data, zero_label=pairing[0], one_label=pairing[1]) / 2.0 for pairing in itertools.permutations(range(num_classes), r=2))
+    sum_avals = sum((a_value(data, zero_label=pairing[0], one_label=pairing[1]) / 2.0 for pairing in itertools.permutations(range(num_classes), r=2)))
 
     return sum_avals * (2 / float(num_classes * (num_classes-1)))  # Eqn 7
-
