@@ -39,25 +39,14 @@ def a_value(probabilities, zero_label=0, one_label=1):
         The A-value as a floating point.
     """
     # Obtain a list of the probabilities for the specified zero label class
-    expanded_points = []
-    for instance in probabilities:
-        if instance[0] == zero_label or instance[0] == one_label:
-            expanded_points.append((instance[0], instance[1][zero_label]))
+    expanded_points = [(instance[0], instance[1][zero_label]) for instance in probabilities if instance[0] == zero_label or instance[0] == one_label]
     sorted_ranks = sorted(expanded_points, key=lambda x: x[1])
 
-    n0, n1, sum_ranks = 0, 0, 0
-    # Iterate through ranks and increment counters for overall count and ranks of class 0
-    for index, point in enumerate(sorted_ranks):
-        if point[0] == zero_label:
-            n0 += 1
-            sum_ranks += index + 1  # Add 1 as ranks are one-based
-        elif point[0] == one_label:
-            n1 += 1
-        else:
-            pass  # Not interested in this class
+    n0 = sum(1 for point in sorted_ranks if point[0] == zero_label)
+    n1 = sum(1 for point in sorted_ranks if point[0] == one_label)
+    sum_ranks = sum(index+1 for index, point in enumerate(sorted_points) if point[0] == zero_label)  # Add 1 as ranks are one-based
 
-    return (sum_ranks - (n0*(n0+1)/2.0)) / float(n0 * n1)  # Eqn 3
-
+    return (sum_ranks - n0*(n0+1) / 2.0) / float(n0 * n1)  # Eqn 3
 
 def MAUC(data, num_classes):
     """
@@ -81,14 +70,10 @@ def MAUC(data, num_classes):
     Returns:
         The MAUC as a floating point value.
     """
-    # Find all pairwise comparisons of labels
-    class_pairs = [x for x in itertools.combinations(range(num_classes), 2)]
 
     # Have to take average of A value with both classes acting as label 0 as this
     # gives different outputs for more than 2 classes
-    sum_avals = 0
-    for pairing in class_pairs:
-        sum_avals += (a_value(data, zero_label=pairing[0], one_label=pairing[1]) +
-                      a_value(data, zero_label=pairing[1], one_label=pairing[0])) / 2.0
+    sum_avals = sum((a_value(data, zero_label=pairing[0], one_label=pairing[1]) / 2.0 for pairing in itertools.permutations(range(num_classes), r=2))
 
     return sum_avals * (2 / float(num_classes * (num_classes-1)))  # Eqn 7
+
