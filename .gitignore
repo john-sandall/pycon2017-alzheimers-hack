@@ -1,6 +1,7 @@
 # Custom additions
 data/*
 !data/.gitkeep
+!data/TADPOLE_Submission_Pycon_Dummy.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
