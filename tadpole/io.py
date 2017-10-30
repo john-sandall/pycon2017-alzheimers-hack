@@ -3,6 +3,26 @@ import numpy as np
 import datetime as dt
 
 
+def get_age_at_exam(data):
+    """Compute data at exam from age at baseline and date of exam
+
+    :param data: Input data
+    :type data: pd.DataFrame
+    :return: Data frame with AGE_AT_EXAM and AGE_INT
+    :rtype: pd.DataFrame
+    """
+    def add_age(x):
+        values = x["EXAMDATE"]
+        val = (values - values.min()).dt.days / 365.25 + x["AGE"].min()
+        return val
+
+    tadpole_grouped = data.groupby("RID").apply(add_age)
+    age_data = pd.DataFrame({
+        'AGE_AT_EXAM': tadpole_grouped,
+        'AGE_INT': tadpole_grouped.astype(int)})
+    return age_data
+
+
 def load_tadpole_data(filename):
     """Load input data of the TADPOLE challenge
 
@@ -40,6 +60,12 @@ def load_tadpole_data(filename):
     targetVariables.extend(['Ventricles_ICV', 'CLIN_STAT'])
     y = LB_Table.loc[:, ['RID'] + targetVariables]
     X = LB_Table.drop(targetVariables, axis=1)
+
+    age = get_age_at_exam(X)
+    # need to match multi-index
+    X_mindex = X.set_index('RID', append=True).swaplevel()
+    X = pd.concat((X_mindex, age), axis=1).reset_index(level=0)
+
     return X, y
 
 

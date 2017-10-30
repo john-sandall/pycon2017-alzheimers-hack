@@ -1,4 +1,5 @@
 import itertools
+import numpy as np
 
 """
     MAUCpy
@@ -48,7 +49,8 @@ def a_value(probabilities, zero_label=0, one_label=1):
 
     return (sum_ranks - n0*(n0+1) / 2.0) / float(n0 * n1)  # Eqn 3
 
-def MAUC(data, num_classes):
+
+def MAUC(data, num_classes=None):
     """
     Calculates the MAUC over a set of multi-class probabilities and
     their labels. This is equation 7 in Hand and Till's 2001 paper.
@@ -66,13 +68,56 @@ def MAUC(data, num_classes):
                              ...
               (labelm, [p(xmc1), p(xmc2), ... (pxmcn)])
              ]
-        num_classes (int): The number of classes in the dataset.
+        num_classes (int): The number of classes in the dataset - 1.
     Returns:
         The MAUC as a floating point value.
     """
+    if num_classes is None:
+        num_classes = len(data[0][1]) - 1
 
     # Have to take average of A value with both classes acting as label 0 as this
     # gives different outputs for more than 2 classes
     sum_avals = sum((a_value(data, zero_label=pairing[0], one_label=pairing[1]) for pairing in itertools.permutations(range(num_classes), r=2)))
 
     return sum_avals / float(num_classes * (num_classes-1))  # Eqn 7
+
+
+def calcBCA(estimLabels, trueLabels, nrClasses):
+    # Balanced Classification Accuracy
+    bcaAll = []
+    for c0 in range(nrClasses):
+        for c1 in range(c0+1, nrClasses):
+            # c0 = positive class  &  c1 = negative class
+            TP = np.sum((estimLabels == c0) & (trueLabels == c0))
+            TN = np.sum((estimLabels == c1) & (trueLabels == c1))
+            FP = np.sum((estimLabels == c1) & (trueLabels == c0))
+            FN = np.sum((estimLabels == c0) & (trueLabels == c1))
+
+            # sometimes the sensitivity of specificity can be NaN, if the user doesn't forecast one of the classes.
+            # In this case we assume a default value for sensitivity/specificity
+            if (TP+FN) == 0:
+                sensitivity = 0.5
+            else:
+                sensitivity = TP/(TP+FN)
+
+            if (TN+FP) == 0:
+                specificity = 0.5
+            else:
+                specificity = TN/(TN+FP)
+
+            bcaCurr = 0.5*(sensitivity+specificity)
+            bcaAll += [bcaCurr]
+            # print('bcaCurr %f TP %f TN %f FP %f FN %f' % (bcaCurr, TP, TN, FP, FN))
+    return np.mean(bcaAll)
+
+
+def calculate_WES(estimates, lowers, uppers, trues):
+    """Weighted Error Score"""
+    coefs = 1 / (uppers - lowers)
+    return np.sum(coefs * np.abs(estimates - trues)) / np.sum(coefs)
+
+
+def calculate_CPA(estimates, lowers, uppers, trues):
+    """Coverage Probability Accuracy for 50% Confidence Interval"""
+    cov_prob = np.sum((lowers < trues) & (uppers > trues)) / trues.shape[0]
+    return np.abs(cov_prob - 0.5)
