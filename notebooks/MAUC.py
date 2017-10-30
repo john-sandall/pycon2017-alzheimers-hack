@@ -73,6 +73,6 @@ def MAUC(data, num_classes):
 
     # Have to take average of A value with both classes acting as label 0 as this
     # gives different outputs for more than 2 classes
-    sum_avals = sum((a_value(data, zero_label=pairing[0], one_label=pairing[1]) / 2.0 for pairing in itertools.permutations(range(num_classes), r=2)))
+    sum_avals = sum((a_value(data, zero_label=pairing[0], one_label=pairing[1]) for pairing in itertools.permutations(range(num_classes), r=2)))
 
-    return sum_avals * (2 / float(num_classes * (num_classes-1)))  # Eqn 7
+    return sum_avals / float(num_classes * (num_classes-1))  # Eqn 7
